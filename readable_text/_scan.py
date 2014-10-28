@@ -21,6 +21,7 @@ class AttibutedLine:
 
 def scan1(lines):
     """Attribute each line with their format info"""
+
     _ptn_list = re.compile('(?P<oind>(?P<iind> +)(?:\\d+\\.|\\*)) +')
 
     def lspaces(self):
@@ -55,6 +56,7 @@ def scan1(lines):
 
 def scan2(alines):
     """Adjust indent for ordered lists"""
+
     class Level:
         def __init__(self, nl, inner_indent, outer_indent):
             self.nl = nl
@@ -68,7 +70,7 @@ def scan2(alines):
 
         def setup(self, to):
             for i in range(self.nl, to):
-                if alines[i].type == 'ordered':
+                if alines[i].type == 'ordered' and alines[i].outer_indent == self.outer_indent:
                     alines[i].indent = self.indent
 
     active_levels = []
