@@ -1,9 +1,9 @@
 from ._scan import scan
 
 class Renderer:
-    def render(self, data, **kwargs):
+    def render(self, data):
         def call_renderer(name, *args):
-            getattr(self, 'render_' + name)(*args, **kwargs)
+            getattr(self, 'render_' + name)(*args)
         return call_renderer(*data)
 
     def __call__(self, data):
@@ -15,6 +15,7 @@ class HTMLRenderer(Renderer):
     def __init__(self, file):
         super().__init__()
         self.file = file
+        self.render_paragraph = self.__render_paragraph_exp
 
     def render_doc(self, data):
         for elem in data:
@@ -22,8 +23,16 @@ class HTMLRenderer(Renderer):
 
     def __render_li(self, item):
         self.file.write('<li>')
-        if len(item) == 1 and item[0][0] == 'paragraph':
-            self.render(item[0], implicit_paragraph=True)
+        num_of_non_list = 0
+        for elem in item:
+            if elem[0] not in ['ordered', 'unordered']:
+                num_of_non_list += 1
+        if num_of_non_list <= 1:
+            original = self.render_paragraph
+            self.render_paragraph = self.__render_paragraph_imp
+            for elem in item:
+                self.render(elem)
+            self.render_paragraph = original
         else:
             for elem in item:
                 self.render(elem)
@@ -47,15 +56,18 @@ class HTMLRenderer(Renderer):
             self.render(elem)
         self.file.write('</blockquote>')
 
-    def render_paragraph(self, data, implicit_paragraph=False):
-        if implicit_paragraph:
-            for elem in data:
-                self.render(elem)
-        else:
-            self.file.write('<p>')
-            for elem in data:
-                self.render(elem)
-            self.file.write('</p>')
+    def __render_paragraph_exp(self, data, implicit_paragraph=False):
+        self.file.write('<p>')
+        for elem in data:
+            self.render(elem)
+        self.file.write('</p>')
+
+    def __render_paragraph_imp(self, data, implicit_paragraph=False):
+        for elem in data:
+            original = self.render_paragraph
+            self.render_paragraph = self.__render_paragraph_exp
+            self.render(elem)
+            self.render_paragraph = original
 
     def render_text(self, data):
         self.file.write(html.escape(data))
