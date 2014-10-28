@@ -114,209 +114,209 @@ def scan3(alines):
             aline.indent = outer_indent[-1]
     return alines
 
-class DocumentObjectContext:
-    def __init__(self):
-        self._child = None
+def scan4(alines, text_parser):
+    class DocumentObjectContext:
+        def __init__(self):
+            self._child = None
 
-    def append(self, aline):
-        while True:
-            if self._child:
-                if self._child.append(aline):
-                    return True
+        def append(self, aline):
+            while True:
+                if self._child:
+                    if self._child.append(aline):
+                        return True
+                    else:
+                        self._add(self._child)
+                        self._child = None
                 else:
-                    self._add(self._child)
-                    self._child = None
-            else:
-                if aline is None:
-                    return False
+                    if aline is None:
+                        return False
 
-                ret = self._feed(aline)
-                if ret is True or ret is False:
-                    return ret
+                    ret = self._feed(aline)
+                    if ret is True or ret is False:
+                        return ret
 
-    def _add(self, elem):
-        raise NotImplementedError()
+        def _add(self, elem):
+            raise NotImplementedError()
 
-    def _feed(self, aline):
-        raise NotImplementedError()
+        def _feed(self, aline):
+            raise NotImplementedError()
 
-class DocumentContext(DocumentObjectContext):
-    def __init__(self):
-        super().__init__()
-        self._child = None
-        self.data = []
-
-    def _add(self, elem):
-        self.data.append(elem)
-
-    def _feed(self, aline):
-        if aline.type == 'ordered' or aline.type == 'unordered':
-            self._child = ListContext(aline.type, aline.indent)
-        else:
-            self._child = MultiParagraphContext()
-
-    def result(self):
-        return [('doc', [e for d in self.data for e in d.result()])]
-
-class ListContext(DocumentObjectContext):
-    class ListItem(DocumentObjectContext):
+    class DocumentContext(DocumentObjectContext):
         def __init__(self):
             super().__init__()
+            self._child = None
             self.data = []
-            self._first_line = True
 
         def _add(self, elem):
             self.data.append(elem)
 
         def _feed(self, aline):
-            if self._first_line:
-                self.indent = aline.indent
-                self.outer_indent = aline.outer_indent
-                self._child = MultiParagraphContext(self.outer_indent)
-                self._child.add(aline.content())
-                self._first_line = False
+            if aline.type == 'ordered' or aline.type == 'unordered':
+                self._child = ListContext(aline.type, aline.indent)
+            else:
+                self._child = MultiParagraphContext()
+
+        def result(self):
+            return [('doc', [e for d in self.data for e in d.result()])]
+
+    class ListContext(DocumentObjectContext):
+        class ListItem(DocumentObjectContext):
+            def __init__(self):
+                super().__init__()
+                self.data = []
+                self._first_line = True
+
+            def _add(self, elem):
+                self.data.append(elem)
+
+            def _feed(self, aline):
+                if self._first_line:
+                    self.indent = aline.indent
+                    self.outer_indent = aline.outer_indent
+                    self._child = MultiParagraphContext(self.outer_indent)
+                    self._child.add(aline.content())
+                    self._first_line = False
+                    return True
+                else:
+                    if aline.type == 'empty':
+                        self._child = MultiParagraphContext(self.outer_indent)
+                    else:
+                        if self.indent > aline.indent:
+                            return False
+                        elif self.indent < aline.indent:
+                            if aline.type == 'text':
+                                if aline.indent < self.outer_indent:
+                                    return False
+                                self._child = MultiParagraphContext(self.outer_indent)
+                            else:
+                                self._child = ListContext(aline.type, aline.indent)
+                        else:
+                            return False
+            def result(self):
+                return [e for d in self.data for e in d.result()]
+
+        def __init__(self, type, indent):
+            super().__init__()
+            assert type in ['ordered', 'unordered']
+            self.type = type
+            self.indent = indent
+            self.items = []
+            self._child = ListContext.ListItem()
+
+        def _add(self, elem):
+            self.items.append(elem)
+
+        def _feed(self, aline):
+            if aline.indent < self.indent:
+                return False
+            elif aline.indent > self.indent:
+                self._child = ListContext.ListItem()
                 return True
             else:
-                if aline.type == 'empty':
-                    self._child = MultiParagraphContext(self.outer_indent)
+                if aline.type != self.type:
+                    return False
                 else:
-                    if self.indent > aline.indent:
-                        return False
-                    elif self.indent < aline.indent:
-                        if aline.type == 'text':
-                            if aline.indent < self.outer_indent:
-                                return False
-                            self._child = MultiParagraphContext(self.outer_indent)
-                        else:
-                            self._child = ListContext(aline.type, aline.indent)
-                    else:
-                        return False
+                    self._child = ListContext.ListItem()
+
         def result(self):
+            return [(self.type, [e.result() for e in self.items])]
+
+    class MultiParagraphContext:
+        def __init__(self, indent=0):
+            super().__init__()
+            self.data = []
+            self.indent = indent
+            self.__constructing = None
+
+        def add(self, text):
+            if text == '':
+                self.__reduce()
+            else:
+                if text.startswith('>'):
+                    if not isinstance(self.__constructing, QuoteBlock):
+                        self.__reduce()
+                        self.__constructing = QuoteBlock()
+                else:
+                    if not isinstance(self.__constructing, ParagraphBlock):
+                        self.__reduce()
+                        self.__constructing = ParagraphBlock()
+                self.__constructing.add(text)
+
+        def __reduce(self):
+            if self.__constructing:
+                self.data.append(self.__constructing)
+            self.__constructing = None
+
+        def append(self, aline):
+            if aline is None:
+                return False
+
+            if aline.type == 'empty' or \
+                    (aline.type == 'text' and aline.indent == self.indent):
+                self.add(aline.content())
+                return True
+            else:
+                return False
+
+        def result(self):
+            self.__reduce()
             return [e for d in self.data for e in d.result()]
 
-    def __init__(self, type, indent):
-        super().__init__()
-        assert type in ['ordered', 'unordered']
-        self.type = type
-        self.indent = indent
-        self.items = []
-        self._child = ListContext.ListItem()
+    class ParagraphBlock:
+        __ptn_imp_space = re.compile('^.*[0-9a-zA-Z]$')
+        __ptn_srule = re.compile('^-{4,}$')
+        __ptn_drule = re.compile('^={4,}$')
+        __ptn_title = re.compile('^(#{1,6}) +')
 
-    def _add(self, elem):
-        self.items.append(elem)
+        def __init__(self):
+            self.lines = []
 
-    def _feed(self, aline):
-        if aline.indent < self.indent:
-            return False
-        elif aline.indent > self.indent:
-            self._child = ListContext.ListItem()
-            return True
-        else:
-            if aline.type != self.type:
-                return False
-            else:
-                self._child = ListContext.ListItem()
+        def add(self, line):
+            self.lines.append(line)
 
-    def result(self):
-        return [(self.type, [e.result() for e in self.items])]
+        def result(self):
+            if len(self.lines) == 1:
+                m = ParagraphBlock.__ptn_srule.match(self.lines[0])
+                if m:
+                    return [('rule')]
 
-class MultiParagraphContext:
-    def __init__(self, indent=0):
-        super().__init__()
-        self.data = []
-        self.indent = indent
-        self.__constructing = None
+                m = ParagraphBlock.__ptn_title.match(self.lines[0])
+                if m:
+                    return [('title', m.span(1)[1], text_parser(self.lines[0][m.span()[1]:]))]
+            elif len(self.lines) == 2:
+                m = ParagraphBlock.__ptn_srule.match(self.lines[1])
+                if m:
+                    return [('title', 2, text_parser(self.lines[0]))]
+                m = ParagraphBlock.__ptn_drule.match(self.lines[1])
+                if m:
+                    return [('title', 1, text_parser(self.lines[0]))]
 
-    def add(self, text):
-        if text == '':
-            self.__reduce()
-        else:
-            if text.startswith('>'):
-                if not isinstance(self.__constructing, QuoteBlock):
-                    self.__reduce()
-                    self.__constructing = QuoteBlock()
-            else:
-                if not isinstance(self.__constructing, ParagraphBlock):
-                    self.__reduce()
-                    self.__constructing = ParagraphBlock()
-            self.__constructing.add(text)
+            text = ''
+            for line in self.lines:
+                if ParagraphBlock.__ptn_imp_space.match(line):
+                    text += ' '
+                text += line
 
-    def __reduce(self):
-        if self.__constructing:
-            self.data.append(self.__constructing)
-        self.__constructing = None
+            return [('paragraph', text_parser(text))]
 
-    def append(self, aline):
-        if aline is None:
-            return False
+    class QuoteBlock:
+        __ptn = re.compile('>\\s*')
 
-        if aline.type == 'empty' or \
-                (aline.type == 'text' and aline.indent == self.indent):
-            self.add(aline.content())
-            return True
-        else:
-            return False
+        def __init__(self):
+            self.lines = []
 
-    def result(self):
-        self.__reduce()
-        return [e for d in self.data for e in d.result()]
+        def add(self, line):
+            m = QuoteBlock.__ptn.match(line)
+            self.lines.append(line[m.span()[1]:])
 
-class ParagraphBlock:
-    __ptn_imp_space = re.compile('^.*[0-9a-zA-Z]$')
-    __ptn_srule = re.compile('^-{4,}$')
-    __ptn_drule = re.compile('^={4,}$')
-    __ptn_title = re.compile('^(#{1,6}) +')
+        def result(self):
+            return [('quote', scan(self.lines))]
 
-    def __init__(self):
-        self.lines = []
-
-    def add(self, line):
-        self.lines.append(line)
-
-    def result(self):
-        if len(self.lines) == 1:
-            m = ParagraphBlock.__ptn_srule.match(self.lines[0])
-            if m:
-                return [('rule')]
-
-            m = ParagraphBlock.__ptn_title.match(self.lines[0])
-            if m:
-                return [('title', m.span(1)[1], parse(self.lines[0][m.span()[1]:]))]
-        elif len(self.lines) == 2:
-            m = ParagraphBlock.__ptn_srule.match(self.lines[1])
-            if m:
-                return [('title', 2, parse(self.lines[0]))]
-            m = ParagraphBlock.__ptn_drule.match(self.lines[1])
-            if m:
-                return [('title', 1, parse(self.lines[0]))]
-
-        text = ''
-        for line in self.lines:
-            if ParagraphBlock.__ptn_imp_space.match(line):
-                text += ' '
-            text += line
-
-        return [('paragraph', parse(text))]
-
-class QuoteBlock:
-    __ptn = re.compile('>\\s*')
-
-    def __init__(self):
-        self.lines = []
-
-    def add(self, line):
-        m = QuoteBlock.__ptn.match(line)
-        self.lines.append(line[m.span()[1]:])
-
-    def result(self):
-        return [('quote', scan(self.lines))]
-
-def scan4(alines):
     doc = DocumentContext()
     for aline in alines:
         doc.append(aline)
     doc.append(None)
     return doc.result()
 
-def scan(lines):
-    return scan4(scan3(scan2(scan1(lines))))
+def scan(lines, text_parser=parse):
+    return scan4(scan3(scan2(scan1(lines))), text_parser)
