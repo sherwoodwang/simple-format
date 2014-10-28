@@ -9,7 +9,7 @@ sys.stdout.write("""
  <body>
 """)
 
-readable_text.render("""
+readable_text.render_as_html("""
 Luctus et ultrices posuere cubilia Curae; Curabitur consequat leo.
 ==================================================================
 
@@ -23,8 +23,8 @@ decima et quinta decima. Eodem modo typi, qui nunc nobis videntur parum clari,
 fiant sollemnes in futurum.
 
 Nunc varius risus quis nulla. Vivamus vel magna. Ut rutrum. Aenean dignissim,
-leo quis faucibus semper, massa est faucibus massa, sit amet pharetra arcu nunc
-et sem. Aliquam tempor. Nam lobortis sem non urna. <Pellentesque> et \*urna sit
+leo quis faucibus semper, *massa est **faucibus** massa,* sit amet pharetra arcu nunc
+et sem. Aliquam tempor. **Nam lobortis sem *non* urna.** <Pellentesque> et \*urna sit
 amet leo accumsan volutpat. Nam molestie lobortis lorem. Quisque eu nulla.
 Donec id orci in ligula dapibus egestas. Donec sed velit ac lectus mattis
 sagittis.

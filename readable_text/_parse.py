@@ -48,6 +48,7 @@ class TextObjectContainer(TextObject):
                 else:
                     end += 1
             push()
+            self.end = endpos
         except TextObjectContainer.__Pop:
             pass
 
@@ -90,8 +91,8 @@ class TextObjectStrong(TextObjectContainer):
 class TextObjectNormal(TextObjectContainer):
     pass
 
-TextObjectStrong.syntax = [TextObjectEscape,  None]
-TextObjectEm.syntax = [TextObjectEscape, None]
+TextObjectStrong.syntax = [TextObjectEscape, None, TextObjectEm]
+TextObjectEm.syntax = [TextObjectEscape, TextObjectStrong, None]
 TextObjectNormal.syntax = [TextObjectEscape, TextObjectStrong, TextObjectEm]
 
 def parse(text, root_class = TextObjectNormal):
