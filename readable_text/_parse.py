@@ -71,8 +71,8 @@ class TextObjectEm(TextObjectContainer):
     lookahead = re.compile('\\*')
     delimiter = re.compile('\\*')
 
-    def __init__(self, text, pos=0, posend=None):
-        super().__init__(text, pos + 1, posend)
+    def __init__(self, text, pos=0, endpos=None):
+        super().__init__(text, pos + 1, endpos)
 
     def result(self):
         return ('em', super().result())
@@ -81,8 +81,8 @@ class TextObjectStrong(TextObjectContainer):
     lookahead = re.compile('\\*\\*')
     delimiter = re.compile('\\*\\*')
 
-    def __init__(self, text, pos=0, posend=None):
-        super().__init__(text, pos + 2, posend)
+    def __init__(self, text, pos=0, endpos=None):
+        super().__init__(text, pos + 2, endpos)
 
     def result(self):
         return ('strong', super().result())

@@ -1,2 +1,3 @@
-from ._scan import scan, render
 from ._parse import parse
+from ._scan import scan
+from ._render import render
