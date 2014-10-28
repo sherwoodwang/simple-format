@@ -1,9 +1,9 @@
 from ._scan import scan
 
 class Renderer:
-    def render(self, data):
+    def render(self, data, **kwargs):
         def call_renderer(name, *args):
-            getattr(self, 'render_' + name)(*args)
+            getattr(self, 'render_' + name)(*args, **kwargs)
         return call_renderer(*data)
 
     def __call__(self, data):
@@ -20,22 +20,25 @@ class HTMLRenderer(Renderer):
         for elem in data:
             self.render(elem)
 
+    def __render_li(self, item):
+        self.file.write('<li>')
+        if len(item) == 1 and item[0][0] == 'paragraph':
+            self.render(item[0], implicit_paragraph=True)
+        else:
+            for elem in item:
+                self.render(elem)
+        self.file.write('</li>')
+
     def render_ordered(self, data):
         self.file.write('<ol>')
         for item in data:
-            self.file.write('<li>')
-            for elem in item:
-                self.render(elem)
-            self.file.write('</li>')
+            self.__render_li(item)
         self.file.write('</ol>')
 
     def render_unordered(self, data):
         self.file.write('<ul>')
         for item in data:
-            self.file.write('<li>')
-            for elem in item:
-                self.render(elem)
-            self.file.write('</li>')
+            self.__render_li(item)
         self.file.write('</ul>')
 
     def render_quote(self, data):
@@ -44,11 +47,15 @@ class HTMLRenderer(Renderer):
             self.render(elem)
         self.file.write('</blockquote>')
 
-    def render_paragraph(self, data):
-        self.file.write('<p>')
-        for elem in data:
-            self.render(elem)
-        self.file.write('</p>')
+    def render_paragraph(self, data, implicit_paragraph=False):
+        if implicit_paragraph:
+            for elem in data:
+                self.render(elem)
+        else:
+            self.file.write('<p>')
+            for elem in data:
+                self.render(elem)
+            self.file.write('</p>')
 
     def render_text(self, data):
         self.file.write(html.escape(data))
