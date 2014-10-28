@@ -71,6 +71,9 @@ class HTMLRenderer(Renderer):
             self.render(elem)
         self.file.write('</h{}>'.format(level))
 
+    def render_rule(self):
+        self.file.write('<hr>')
+
 def render_as_html(text, file):
     renderer = HTMLRenderer(file)
     data = scan(text.splitlines())

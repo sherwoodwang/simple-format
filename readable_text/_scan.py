@@ -278,7 +278,7 @@ def scan4(alines, text_parser):
             if len(self.lines) == 1:
                 m = ParagraphBlock.__ptn_srule.match(self.lines[0])
                 if m:
-                    return [('rule')]
+                    return [('rule', )]
 
                 m = ParagraphBlock.__ptn_title.match(self.lines[0])
                 if m:
