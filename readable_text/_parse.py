@@ -10,6 +10,7 @@ class TextObject:
         raise NotImplementedError()
 
 class TextObjectContainer(TextObject):
+    delimiting_required = False
 
     class __Pop(Exception):
         pass
@@ -50,7 +51,10 @@ class TextObjectContainer(TextObject):
             push()
             self.end = endpos
         except TextObjectContainer.__Pop:
-            pass
+            self.delimited = True
+        else:
+            self.delimited = False
+            self.end = end
 
     def result(self):
         return [("text", self.text[elem[0]:elem[1]])
