@@ -5,6 +5,7 @@ sys.stdout.write("""
 <html>
  <head>
   <title>test</title>
+  <meta charset="utf-8">
  </head>
  <body>
 """)
@@ -47,6 +48,8 @@ Laoreet, est sed gravida tempor, nibh.
     * Duis lobortis, metus eu laoreet tristique.
      > Leo sollicitudin consequat. Aliquam lobortis. 
      > In eu justo. Nunc vitae.
+     >  * list item 1 in quote
+     >  * list item 2 in quote
      > Egestas. Sed vitae eros. Nulla.
     * Tempor vel, aliquet ut, eros. In.
   3. Enim mauris, suscipit a, auctor et.
@@ -145,6 +148,10 @@ Praesent vel enim sed eros luctus imperdiet. Mauris neque ante, placerat at,
 mollis vitae, faucibus quis, leo. Ut feugiat. Vivamus urna quam, congue
 vulputate, convallis non, cursus cursus, risus. Quisque aliquet. 
 
+中
+文
+测
+试
 
 """, sys.stdout)
 

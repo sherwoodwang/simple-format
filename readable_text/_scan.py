@@ -11,14 +11,6 @@ class AttibutedLine:
         m = self.__ptn_space.match(self.data)
         return m.span()[1]
 
-    def content(self):
-        if self.type == 'empty':
-            return ''
-        elif self.type in ['ordered', 'unordered']:
-            return self.data[self.content_start:]
-        else:
-            return self.data[self.indent:]
-
 def scan1(lines):
     """Attribute each line with their format info"""
 
@@ -49,7 +41,7 @@ def scan1(lines):
             sp = line.lspaces()
             if sp == len(line.data):
                 line.type = 'empty'
-            line.spaces = sp
+            line.content_start = sp
         alines.append(line)
 
     return alines
@@ -91,7 +83,7 @@ def scan2(alines):
             while active_levels and active_levels[-1].outer_indent > aline.indent:
                 active_levels.pop().setup(i)
         elif aline.type == 'text':
-            while active_levels and active_levels[-1].outer_indent > aline.spaces:
+            while active_levels and active_levels[-1].outer_indent > aline.content_start:
                 active_levels.pop().setup(i)
 
     while active_levels:
@@ -109,7 +101,7 @@ def scan3(alines):
                 outer_indent.pop()
             outer_indent.append(aline.outer_indent)
         elif aline.type == 'text':
-            while outer_indent[-1] > aline.spaces:
+            while outer_indent[-1] > aline.content_start:
                 outer_indent.pop()
             aline.indent = outer_indent[-1]
     return alines
@@ -190,7 +182,7 @@ def scan5(alines, text_parser):
                     self.outer_indent = aline.outer_indent
                     self.explicitly_paragraphical = aline.explicitly_paragraphical
                     self._child = MultiParagraphContext(self.outer_indent)
-                    self._child.add(aline.content())
+                    self._child.append(aline, no_check = True)
                     self._first_line = False
                     return True
                 else:
@@ -261,43 +253,51 @@ def scan5(alines, text_parser):
     class MultiParagraphContext:
         def __init__(self, indent=0):
             super().__init__()
-            self.data = []
+            self.lines = []
             self.indent = indent
-            self.__constructing = None
 
-        def add(self, text):
-            if text == '':
-                self.__reduce()
-            else:
-                if text.startswith('>'):
-                    if not isinstance(self.__constructing, QuoteBlock):
-                        self.__reduce()
-                        self.__constructing = QuoteBlock()
-                else:
-                    if not isinstance(self.__constructing, ParagraphBlock):
-                        self.__reduce()
-                        self.__constructing = ParagraphBlock()
-                self.__constructing.add(text)
-
-        def __reduce(self):
-            if self.__constructing:
-                self.data.append(self.__constructing)
-            self.__constructing = None
-
-        def append(self, aline):
+        def append(self, aline, no_check = False):
             if aline is None:
                 return False
 
             if aline.type == 'empty' or \
-                    (aline.type == 'text' and aline.indent == self.indent):
-                self.add(aline.content())
+                    (aline.type == 'text' and aline.indent == self.indent or \
+                    no_check):
+                self.lines.append(aline)
                 return True
             else:
                 return False
 
         def result(self):
-            self.__reduce()
-            return [e for d in self.data for e in d.result()]
+            min_start = min((line.content_start for line in self.lines))
+
+            data = []
+            constructing = None
+
+            def reduce():
+                nonlocal data, constructing
+
+                if constructing:
+                    data.append(constructing)
+                constructing = None
+
+            for line in self.lines:
+                text = line.data[line.content_start:] 
+                if text == '':
+                    reduce()
+                else:
+                    if text.startswith('>'):
+                        if not isinstance(constructing, QuoteBlock):
+                            reduce()
+                            constructing = QuoteBlock()
+                    else:
+                        if not isinstance(constructing, ParagraphBlock):
+                            reduce()
+                            constructing = ParagraphBlock()
+                    constructing.add(text)
+            reduce()
+
+            return [e for d in data for e in d.result()]
 
     class ParagraphBlock:
         __ptn_imp_space = re.compile('^.*[0-9a-zA-Z]$')
@@ -343,11 +343,12 @@ def scan5(alines, text_parser):
             self.lines = []
 
         def add(self, line):
-            m = QuoteBlock.__ptn.match(line)
-            self.lines.append(line[m.span()[1]:])
+            self.lines.append(line)
 
         def result(self):
-            return [('quote', scan(self.lines))]
+            min_spaces = min((QuoteBlock.__ptn.match(line).span()[1] for line in self.lines))
+            lines = [line[min_spaces:] for line in self.lines]
+            return [('quote', scan(lines))]
 
     doc = DocumentContext()
     for aline in alines:
