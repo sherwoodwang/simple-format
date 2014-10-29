@@ -46,11 +46,11 @@ Laoreet, est sed gravida tempor, nibh.
   2. Bibendum odio sit amet neque. Integer.
     * Erat. Phasellus luctus cursus risus. Phasellus.
     * Duis lobortis, metus eu laoreet tristique.
-     > Leo sollicitudin consequat. Aliquam lobortis. 
-     > In eu justo. Nunc vitae.
-     >  * list item 1 in quote
-     >  * list item 2 in quote
-     > Egestas. Sed vitae eros. Nulla.
+      > Leo sollicitudin consequat. Aliquam lobortis. 
+      > In eu justo. Nunc vitae.
+      >  * list item 1 in quote
+      >  * list item 2 in quote
+      > Egestas. Sed vitae eros. Nulla.
     * Tempor vel, aliquet ut, eros. In.
   3. Enim mauris, suscipit a, auctor et.
     1. Amet, sem.
