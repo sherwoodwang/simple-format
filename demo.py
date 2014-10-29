@@ -49,7 +49,6 @@ Laoreet, est sed gravida tempor, nibh.
      > In eu justo. Nunc vitae.
      > Egestas. Sed vitae eros. Nulla.
     * Tempor vel, aliquet ut, eros. In.
-
   3. Enim mauris, suscipit a, auctor et.
     1. Amet, sem.
     2. Ac dui. In ac urna non.
@@ -57,18 +56,10 @@ Laoreet, est sed gravida tempor, nibh.
       * Venenatis. Vivamus dui. Nunc accumsan, quam.
     3. Orci luctus et ultrices posuere cubilia.
     4. Class aptent taciti sociosqu ad.
-
   4. Sit amet malesuada tortor nisi sit.  Decima. Eodem modo typi, qui nunc
      nobis videntur parum clari, fiant sollemnes in futurum.  Nunc varius risus
      quis nulla. Vivamus vel magna. Ut rutrum. Aenean dignissim, leo quis faucibus
      semper, massa est.
-
-     Vulputate ac, pede. Donec vestibulum purus non tortor. Integer at nunc.
-
-     Suspendisse fermentum velit quis sem. Phasellus suscipit nunc in risus.
-     Nulla sed lectus. Morbi sollicitudin, diam ac bibendum scelerisque, enim
-     tortor.
-
   5. Id quam porta varius. Ut aliquet.
   6. Claritatem. Investigationes demonstraverunt lectores legere me.
   7. Ipsum dolor sit amet, consectetuer adipiscing.
@@ -103,15 +94,24 @@ elit sem, tempor at, pharetra eu, sodales sit amet, elit.
 
 ### Et ultrices posuere cubilia Curae; Vestibulum.
 
-Curabitur urna tellus, aliquam vitae, ultrices eget, vehicula nec, diam.
-Integer elementum, felis non faucibus euismod, erat massa dictum eros, eu
-ornare ligula tortor et mauris. Cras molestie magna in nibh. Aenean et tellus.
-Fusce adipiscing commodo erat. In eu justo. Nulla dictum, erat sed blandit
-venenatis, arcu dolor molestie dolor, vitae congue orci risus a nulla.
-Pellentesque sit amet arcu. In mattis laoreet enim. Pellentesque id augue et
-arcu blandit tincidunt. Pellentesque elit ante, rhoncus quis, dapibus sit amet,
-tincidunt eu, nibh. In imperdiet. Nunc lectus neque, commodo eget, porttitor
-quis, fringilla quis, purus.
+  1. Curabitur urna tellus, aliquam vitae, ultrices eget, vehicula nec, diam.
+     Integer elementum, felis non faucibus euismod, erat massa dictum eros, eu
+     ornare ligula tortor et mauris. Cras molestie magna in nibh. Aenean et
+     tellus.  Fusce adipiscing commodo erat. In eu justo. Nulla dictum, erat
+     sed blandit venenatis, arcu dolor molestie dolor, vitae congue orci risus
+     a nulla.  Pellentesque sit amet arcu. In mattis laoreet enim. Pellentesque
+     id augue et arcu blandit tincidunt. Pellentesque elit ante, rhoncus quis,
+     dapibus sit amet, tincidunt eu, nibh. In imperdiet. Nunc lectus neque,
+     commodo eget, porttitor quis, fringilla quis, purus.
+
+  2. Vulputate ac, pede. Donec vestibulum purus non tortor. Integer at nunc.
+
+  3. Suspendisse fermentum velit quis sem. Phasellus suscipit nunc in risus.
+     Nulla sed lectus. Morbi sollicitudin, diam ac bibendum scelerisque, enim
+     tortor.
+
+Fusce ac elit ut elit aliquam suscipit. Duis leo est, interdum nec, varius in,
+facilisis vitae, odio. Phasellus eget leo at.
 
 > Nunc non mauris. Nam accumsan tortor gravida elit. Cras porttitor.
 > 

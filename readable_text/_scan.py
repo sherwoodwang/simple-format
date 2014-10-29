@@ -55,7 +55,7 @@ def scan1(lines):
     return alines
 
 def scan2(alines):
-    """Adjust indent for ordered lists"""
+    """Adjust indents for ordered lists"""
 
     class Level:
         def __init__(self, nl, inner_indent, outer_indent):
@@ -99,7 +99,7 @@ def scan2(alines):
     return alines
 
 def scan3(alines):
-    """deal with indent in text lines"""
+    """deal with indents in text lines"""
 
     outer_indent = [0]
     for i in range(len(alines)):
@@ -114,7 +114,22 @@ def scan3(alines):
             aline.indent = outer_indent[-1]
     return alines
 
-def scan4(alines, text_parser):
+def scan4(alines):
+    """mark explicitly paragraphical list items"""
+
+    explicitly_paragraphical = True
+    for aline in alines:
+        if aline.type == 'empty':
+            explicitly_paragraphical = True
+        else:
+            if aline.type in ['ordered', 'unordered']:
+                aline.explicitly_paragraphical = explicitly_paragraphical
+
+            explicitly_paragraphical = False
+
+    return alines
+
+def scan5(alines, text_parser):
     class DocumentObjectContext:
         def __init__(self):
             self._child = None
@@ -173,13 +188,14 @@ def scan4(alines, text_parser):
                 if self._first_line:
                     self.indent = aline.indent
                     self.outer_indent = aline.outer_indent
+                    self.explicitly_paragraphical = aline.explicitly_paragraphical
                     self._child = MultiParagraphContext(self.outer_indent)
                     self._child.add(aline.content())
                     self._first_line = False
                     return True
                 else:
                     if aline.type == 'empty':
-                        self._child = MultiParagraphContext(self.outer_indent)
+                        assert False
                     else:
                         if self.indent > aline.indent:
                             return False
@@ -193,7 +209,28 @@ def scan4(alines, text_parser):
                         else:
                             return False
             def result(self):
-                return [e for d in self.data for e in d.result()]
+                elems = [e for d in self.data for e in d.result()]
+
+                paragraphical = self.explicitly_paragraphical
+                import sys
+                if not paragraphical:
+                    num_of_par = 0
+                    for elem in elems:
+                        if elem[0] == 'paragraph':
+                            num_of_par += 1
+                    if num_of_par > 1:
+                        paragraphical = True
+
+                if not paragraphical:
+                    new_elems = []
+                    for elem in elems:
+                        if elem[0] == 'paragraph':
+                            new_elems.extend(elem[1])
+                        else:
+                            new_elems.append(elem)
+                    elems = new_elems
+
+                return elems
 
         def __init__(self, type, indent):
             super().__init__()
@@ -319,4 +356,4 @@ def scan4(alines, text_parser):
     return doc.result()
 
 def scan(lines, text_parser=parse):
-    return scan4(scan3(scan2(scan1(lines))), text_parser)
+    return scan5(scan4(scan3(scan2(scan1(lines)))), text_parser)
