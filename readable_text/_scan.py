@@ -204,7 +204,6 @@ def scan5(alines, text_parser):
                 elems = [e for d in self.data for e in d.result()]
 
                 paragraphical = self.explicitly_paragraphical
-                import sys
                 if not paragraphical:
                     num_of_par = 0
                     for elem in elems:
@@ -300,7 +299,7 @@ def scan5(alines, text_parser):
             return [e for d in data for e in d.result()]
 
     class ParagraphBlock:
-        __ptn_imp_space = re.compile('^.*[0-9a-zA-Z]$')
+        __ptn_imp_space = re.compile('^.*[0-9a-zA-Z,.!?:]$')
         __ptn_srule = re.compile('^-{4,}$')
         __ptn_drule = re.compile('^={4,}$')
         __ptn_title = re.compile('^(#{1,6}) +')
@@ -330,7 +329,7 @@ def scan5(alines, text_parser):
 
             text = ''
             for line in self.lines:
-                if ParagraphBlock.__ptn_imp_space.match(line):
+                if ParagraphBlock.__ptn_imp_space.match(text):
                     text += ' '
                 text += line
 
