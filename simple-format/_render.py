@@ -1,4 +1,6 @@
 from ._scan import scan
+import html
+
 
 class Renderer:
     def render(self, data):
@@ -10,7 +12,7 @@ class Renderer:
         assert isinstance(data, list) and len(data) == 1
         return self.render(data[0])
 
-import html
+
 class HTMLRenderer(Renderer):
     def __init__(self, file):
         super().__init__()
@@ -73,6 +75,7 @@ class HTMLRenderer(Renderer):
 
     def render_rule(self):
         self.file.write('<hr>')
+
 
 def render_as_html(text, file):
     renderer = HTMLRenderer(file)

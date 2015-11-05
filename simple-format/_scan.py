@@ -11,14 +11,11 @@ class AttibutedLine:
         m = self.__ptn_space.match(self.data)
         return m.span()[1]
 
+
 def scan1(lines):
     """Attribute each line with their format info"""
 
     _ptn_list = re.compile('(?P<oind>(?P<iind> +)(?:\\d+\\.|\\*)) +')
-
-    def lspaces(self):
-        m = self._ptn_space.match(self.line)
-        return m.span()[1]
 
     alines = []
     for rline in lines:
@@ -46,56 +43,57 @@ def scan1(lines):
 
     return alines
 
+
 def scan2(alines):
     """Adjust indents for ordered lists"""
 
     class Level:
-        def __init__(self, nl, inner_indent, outer_indent):
-            self.nl = nl
+        def __init__(self, begin, inner_indent, outer_indent):
+            self.begin = begin
             self.inner_indent = inner_indent
             self.outer_indent = outer_indent
             self.indent = inner_indent
 
-        def update_indent(self, indent):
+        def reduce_indent(self, indent):
             if self.indent > indent:
                 self.indent = indent
 
-        def setup(self, to):
-            for i in range(self.nl, to):
+        def setup(self, end):
+            for i in range(self.begin, end):
                 if alines[i].type == 'ordered' and alines[i].outer_indent == self.outer_indent:
                     alines[i].indent = self.indent
 
-    active_levels = []
+    levels = []
 
-    for i in range(len(alines)):
-        aline = alines[i]
+    for i, aline in enumerate(alines):
         if aline.type == 'ordered':
-            while active_levels and active_levels[-1].outer_indent > aline.outer_indent:
-                active_levels.pop().setup(i)
-            if active_levels:
-                if active_levels[-1].outer_indent < aline.outer_indent:
-                    active_levels.append(Level(i, aline.outer_indent, aline.outer_indent))
-                elif active_levels[-1].outer_indent == aline.outer_indent:
-                    active_levels[-1].update_indent(aline.inner_indent)
+            while levels and levels[-1].outer_indent > aline.outer_indent:
+                levels.pop().setup(i)
+            if levels:
+                if levels[-1].outer_indent < aline.outer_indent:
+                    levels.append(Level(i, aline.inner_indent, aline.outer_indent))
+                elif levels[-1].outer_indent == aline.outer_indent:
+                    levels[-1].reduce_indent(aline.inner_indent)
             else:
-                active_levels.append(Level(i, aline.outer_indent, aline.outer_indent))
+                levels.append(Level(i, aline.outer_indent, aline.outer_indent))
         elif aline.type == 'unordered':
-            while active_levels and active_levels[-1].outer_indent > aline.indent:
-                active_levels.pop().setup(i)
+            while levels and levels[-1].outer_indent > aline.indent:
+                levels.pop().setup(i)
         elif aline.type == 'text':
-            while active_levels and active_levels[-1].outer_indent > aline.content_start:
-                active_levels.pop().setup(i)
+            while levels and levels[-1].outer_indent > aline.content_start:
+                levels.pop().setup(i)
 
-    while active_levels:
-        active_levels.pop().setup(i)
+    while levels:
+        levels.pop().setup(len(alines))
+
     return alines
+
 
 def scan3(alines):
     """deal with indents in text lines"""
 
     outer_indent = [0]
-    for i in range(len(alines)):
-        aline = alines[i]
+    for i, aline in enumerate(alines):
         if aline.type in ['ordered', 'unordered']:
             while outer_indent[-1] >= aline.outer_indent:
                 outer_indent.pop()
@@ -105,6 +103,7 @@ def scan3(alines):
                 outer_indent.pop()
             aline.indent = outer_indent[-1]
     return alines
+
 
 def scan4(alines):
     """mark explicitly paragraphical list items"""
@@ -120,6 +119,7 @@ def scan4(alines):
             explicitly_paragraphical = False
 
     return alines
+
 
 def scan5(alines, text_parser):
     class DocumentObjectContext:
@@ -182,7 +182,7 @@ def scan5(alines, text_parser):
                     self.outer_indent = aline.outer_indent
                     self.explicitly_paragraphical = aline.explicitly_paragraphical
                     self._child = MultiParagraphContext(self.outer_indent)
-                    self._child.append(aline, no_check = True)
+                    self._child.append(aline, no_check=True)
                     self._first_line = False
                     return True
                 else:
@@ -200,6 +200,7 @@ def scan5(alines, text_parser):
                                 self._child = ListContext(aline.type, aline.indent)
                         else:
                             return False
+
             def result(self):
                 elems = [e for d in self.data for e in d.result()]
 
@@ -238,8 +239,7 @@ def scan5(alines, text_parser):
             if aline.indent < self.indent:
                 return False
             elif aline.indent > self.indent:
-                self._child = ListContext.ListItem()
-                return True
+                assert False
             else:
                 if aline.type != self.type:
                     return False
@@ -255,7 +255,7 @@ def scan5(alines, text_parser):
             self.lines = []
             self.indent = indent
 
-        def append(self, aline, no_check = False):
+        def append(self, aline, no_check=False):
             if aline is None:
                 return False
 
@@ -268,8 +268,6 @@ def scan5(alines, text_parser):
                 return False
 
         def result(self):
-            min_start = min((line.content_start for line in self.lines))
-
             data = []
             constructing = None
 
@@ -354,6 +352,7 @@ def scan5(alines, text_parser):
         doc.append(aline)
     doc.append(None)
     return doc.result()
+
 
 def scan(lines, text_parser=parse):
     return scan5(scan4(scan3(scan2(scan1(lines)))), text_parser)
