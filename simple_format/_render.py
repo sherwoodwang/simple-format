@@ -14,9 +14,10 @@ class Renderer:
 
 
 class HTMLRenderer(Renderer):
-    def __init__(self, file):
+    def __init__(self, file, title_toplevel=0):
         super().__init__()
         self.file = file
+        self.title_toplevel = title_toplevel
 
     def render_doc(self, data):
         for elem in data:
@@ -68,6 +69,7 @@ class HTMLRenderer(Renderer):
         self.file.write('</em>')
 
     def render_title(self, level, data):
+        level += self.title_toplevel
         self.file.write('<h{}>'.format(level))
         for elem in data:
             self.render(elem)
@@ -77,7 +79,7 @@ class HTMLRenderer(Renderer):
         self.file.write('<hr>')
 
 
-def render_as_html(text, file):
-    renderer = HTMLRenderer(file)
+def render_as_html(text, file, title_toplevel=0):
+    renderer = HTMLRenderer(file, title_toplevel)
     data = scan(text.splitlines())
     renderer(data)
