@@ -1,4 +1,4 @@
-import readable_text
+import simple_format
 import sys
 
 sys.stdout.write("""
@@ -10,7 +10,7 @@ sys.stdout.write("""
  <body>
 """)
 
-readable_text.render_as_html("""
+simple_format.render_as_html("""
 Luctus et ultrices posuere cubilia Curae; Curabitur consequat leo.
 ==================================================================
 
