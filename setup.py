@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_format",
-    version="0.1",
+    version="0.2",
     packages=find_packages(),
     description='A simple text formatter converting a readable plain text to html',
     classifiers=[

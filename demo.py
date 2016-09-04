@@ -10,7 +10,7 @@ sys.stdout.write("""
  <body>
 """)
 
-simple_format.render_as_html("""
+for part in simple_format.render_as_html("""
 Luctus et ultrices posuere cubilia Curae; Curabitur consequat leo.
 ==================================================================
 
@@ -153,7 +153,8 @@ vulputate, convallis non, cursus cursus, risus. Quisque aliquet.
 测
 试
 
-""", sys.stdout)
+"""):
+    sys.stdout.write(part)
 
 sys.stdout.write("""
  </body>
